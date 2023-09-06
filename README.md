@@ -1,19 +1,22 @@
 Shapiro is a datalog toolbox and zoo.
 
-Here you can find, at the moment, two simple in-memory query engines that support materialized recursive queries.
+Here you can find, at the moment, **two** simple in-memory query engines that support materialized recursive queries.
 
-    A very fast in-memory parallel datalog and relational algebra engine that relies on an ordered(not necessarily sorted) container for storage and sorted sets as indexes - Simple Datalog
-    A not-so-fast in-memory parallel datalog engine that uses no indexes and does not rely on order - ChibiDatalog
 
-The following snippet showcases ChibiDatalog in action.
+1. [x] A very fast in-memory parallel datalog and relational algebra engine that relies on an ordered(not necessarily sorted) 
+   container for storage and sorted sets as indexes - Simple Datalog
+2. [x] A not-so-fast in-memory parallel datalog engine that uses no indexes and does not rely on order - ChibiDatalog
 
+The following snippet showcases `ChibiDatalog` in action.
+
+```rust
 #[cfg(test)]
 mod tests {
-   use crate::models::reasoner::{Dynamic, Materializer, Queryable};
+
+use crate::models::reasoner::{Dynamic, Materializer, Queryable};
    use crate::models::datalog::{Atom, Rule};
    use crate::models::index::ValueRowId;
    use crate::reasoning::reasoners::chibi::ChibiDatalog;
-
    #[test]
    fn test_chibi_datalog() {
       // Chibi Datalog is a simple incremental datalog reasoner.
@@ -22,7 +25,6 @@ mod tests {
       reasoner.insert("edge", vec![Box::new(2), Box::new(3)]);
       reasoner.insert("edge", vec![Box::new(2), Box::new(4)]);
       reasoner.insert("edge", vec![Box::new(4), Box::new(5)]);
-
       // Queries are structured as datalog programs, collections of rules. The following query
       // has two rules, one of them dictating that every edge is reachable from itself
       // and another that establishes reachability to be transitive. Notice how this rule
@@ -31,10 +33,8 @@ mod tests {
          Rule::from("reachable(?x, ?y) <- [edge(?x, ?y)]"),
          Rule::from("reachable(?x, ?z) <- [reachable(?x, ?y), reachable(?y, ?z)]"),
       ];
-
       // To materialize a query is to ensure that with any updates, the query will remain correct.
       reasoner.materialize(&query);
-
       // The input graph looks like this:
       // 1 --> 2 --> 3
       //       |
@@ -60,7 +60,6 @@ mod tests {
       ]
               .iter()
               .for_each(|point_query| assert!(reasoner.contains(point_query)));
-
       // Now, for the incremental aspect. Let's say that we got an update to our graph, removing
       // three edges (1 --> 2), (2 --> 3), (2 --> 4), and adding two (1 --> 3), (3 --> 4):
       // 1 --> 3 --> 4 --> 5
@@ -86,7 +85,6 @@ mod tests {
          (false, ("edge", vec![Box::new(2), Box::new(3)])),
          (false, ("edge", vec![Box::new(2), Box::new(4)])),
       ]);
-
       vec![
          Atom::from("reachable(1, 3)"),
          Atom::from("reachable(3, 4)"),
@@ -94,7 +92,6 @@ mod tests {
       ]
               .iter()
               .for_each(|point_query| assert!(reasoner.contains(point_query)));
-
       vec![
          Atom::from("reachable(1, 2)"),
          Atom::from("reachable(2, 3)"),
@@ -106,16 +103,13 @@ mod tests {
    }
 }
 
-In case you are interested in performance, clone the repo and just cargo run.
+```
 
-It may not be very informative, later on I will include a proper benchmark here, but in order to answer six very not-trivial queries over hundreds of thousands of triples(the included benchmark), barely half a second passed on my M1 Pro.
-Roadmap
+### Roadmap
 
-    [] Using DashMap instead of indexmap
-    Streaming implementation with differential-dataflow
-    [] Negation(stratification is already implemented)
-    [] Head Aggregations
-    [] Body functions
-    [] Head Skolemization
-    [] Program Linearization
-    [] Multiple heads for one body
+0. [] Using `DashMap` instead of `indexmap`
+
+1. [x] Streaming implementation with `differential-dataflow`
+2. [] Negation(stratification is already implemented)
+3. [] Head Aggregations
+4. [] Body functions
